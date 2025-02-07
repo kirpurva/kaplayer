@@ -19,9 +19,9 @@ MainWindow::MainWindow(QWidget *parent)
     , isPlaying(false)
     , isFullScreen(false)
 {
-    // Robust OpenGL configuration
+    
     QSurfaceFormat format;
-    format.setVersion(4, 5);  // Modern OpenGL version for NVIDIA
+    format.setVersion(4, 5);  
     format.setProfile(QSurfaceFormat::CoreProfile);
     format.setDepthBufferSize(24);
     format.setStencilBufferSize(8);
@@ -31,24 +31,19 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
     connect(mediaPlayer, QOverload<QMediaPlayer::Error>::of(&QMediaPlayer::error),
         this, &MainWindow::handleError);
-    // Media player setup
     mediaPlayer->setVideoOutput(videoWidget);
     ui->videoLayout->addWidget(videoWidget);
     connect(mediaPlayer, &QMediaPlayer::mediaStatusChanged, 
             this, &MainWindow::handleMediaStatusChange);
 
-    // Control timer setup
     controlHideTimer->setInterval(3000);
     connect(controlHideTimer, &QTimer::timeout, this, &MainWindow::hideControls);
 
-    // Event filtering for video widget
     videoWidget->setMouseTracking(true);
     videoWidget->installEventFilter(this);
 
-    // Create the floating toolbar
     createFloatingToolbar();
 
-    // Connect regular controls
     connect(ui->openButton, &QPushButton::clicked, this, &MainWindow::openFile);
     connect(ui->playButton, &QPushButton::clicked, this, &MainWindow::play);
     connect(ui->pauseButton, &QPushButton::clicked, this, &MainWindow::pause);
@@ -57,15 +52,11 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->positionSlider, &QSlider::sliderMoved, this, &MainWindow::setPosition);
     connect(ui->volumeSlider, &QSlider::valueChanged, mediaPlayer, &QMediaPlayer::setVolume);
 
-    // Initial volume setup
     ui->volumeSlider->setValue(50);
     mediaPlayer->setVolume(50);
 
-    // Media position updates
     connect(mediaPlayer, &QMediaPlayer::positionChanged, this, &MainWindow::updatePosition);
     connect(mediaPlayer, &QMediaPlayer::durationChanged, this, &MainWindow::updateDuration);
-
-    // Initial UI state
     ui->pauseButton->setEnabled(false);
     ui->controlsOverlay->setAttribute(Qt::WA_TranslucentBackground);
     ui->controlsOverlay->raise();
@@ -80,16 +71,16 @@ MainWindow::~MainWindow()
 
 void MainWindow::createFloatingToolbar()
 {
-    // Create the floating toolbar
+
     floatingToolbar = new QWidget(this);
     floatingToolbar->setWindowFlags(Qt::FramelessWindowHint | Qt::Tool | Qt::WindowStaysOnTopHint);
     floatingToolbar->setStyleSheet("background: rgba(0, 0, 0, 150); border-radius: 5px;");
 
-    // Layout for the floating toolbar
+
     QHBoxLayout *layout = new QHBoxLayout(floatingToolbar);
     layout->setContentsMargins(10, 5, 10, 5);
 
-    // Add buttons and slider to the toolbar
+
     fsPlayButton = new QPushButton("Play", floatingToolbar);
     fsPauseButton = new QPushButton("Pause", floatingToolbar);
     fsStopButton = new QPushButton("Stop", floatingToolbar);
@@ -102,14 +93,13 @@ void MainWindow::createFloatingToolbar()
     layout->addWidget(fsPositionSlider);
     layout->addWidget(fsExitFullscreenButton);
 
-    // Connect floating toolbar buttons
     connect(fsPlayButton, &QPushButton::clicked, this, &MainWindow::play);
     connect(fsPauseButton, &QPushButton::clicked, this, &MainWindow::pause);
     connect(fsStopButton, &QPushButton::clicked, this, &MainWindow::stop);
     connect(fsPositionSlider, &QSlider::sliderMoved, this, &MainWindow::setPosition);
     connect(fsExitFullscreenButton, &QPushButton::clicked, this, &MainWindow::toggleFullScreen);
 
-    // Initially hide the floating toolbar
+
     floatingToolbar->hide();
 }
 
@@ -134,10 +124,9 @@ void MainWindow::hideControls()
 void MainWindow::showControls()
 {
     if (isFullScreen) {
-        // Position the toolbar at the bottom of the screen
         floatingToolbar->move((width() - floatingToolbar->width()) / 2, height() - floatingToolbar->height() - 10);
         floatingToolbar->show();
-        controlHideTimer->start(3000); // Reset the timer
+        controlHideTimer->start(3000); 
     }
 }
 
@@ -150,7 +139,7 @@ void MainWindow::toggleFullScreen()
     } else {
         showFullScreen();
         ui->controlsOverlay->setVisible(false);
-        showControls(); // Show the floating toolbar
+        showControls(); 
     }
     isFullScreen = !isFullScreen;
 }
@@ -202,7 +191,7 @@ void MainWindow::setPosition(int position)
 void MainWindow::updatePosition(qint64 position)
 {
     ui->positionSlider->setValue(position);
-    fsPositionSlider->setValue(position); // Sync full-screen slider
+    fsPositionSlider->setValue(position); 
     qint64 seconds = position / 1000;
     QString time = QString("%1:%2").arg(seconds / 60, 2, 10, QChar('0')).arg(seconds % 60, 2, 10, QChar('0'));
     ui->currentTimeLabel->setText(time);
@@ -211,7 +200,7 @@ void MainWindow::updatePosition(qint64 position)
 void MainWindow::updateDuration(qint64 duration)
 {
     ui->positionSlider->setRange(0, duration);
-    fsPositionSlider->setRange(0, duration); // Sync full-screen slider
+    fsPositionSlider->setRange(0, duration); 
     qint64 seconds = duration / 1000;
     QString time = QString("%1:%2").arg(seconds / 60, 2, 10, QChar('0')).arg(seconds % 60, 2, 10, QChar('0'));
     ui->totalTimeLabel->setText(time);
