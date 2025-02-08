@@ -47,7 +47,7 @@ private:
     bool isFullScreen;
     
 
-    // Floating toolbar for full-screen mode
+
     QWidget *floatingToolbar;
     QPushButton *fsPlayButton;
     QPushButton *fsPauseButton;
@@ -55,7 +55,7 @@ private:
     QSlider *fsPositionSlider;
     QPushButton *fsExitFullscreenButton;
 
-    void createFloatingToolbar(); // Helper function to create the floating toolbar
+    void createFloatingToolbar(); 
 };
 
-#endif // MAINWINDOW_H
+#endif 
