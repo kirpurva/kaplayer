@@ -25,16 +25,16 @@ protected:
     bool eventFilter(QObject *obj, QEvent *event) override; 
 
 private slots:
-    void openFile(); // Slot to open a media file
-    void play();     // Slot to play the media
-    void pause();    // Slot to pause the media
-    void stop();     // Slot to stop the media
-    void setPosition(int position); // Slot to set the media position
-    void updatePosition(qint64 position); // Slot to update the current position
-    void updateDuration(qint64 duration); // Slot to update the total duration
-    void toggleFullScreen(); // Slot to toggle full-screen mode
-    void hideControls();     // Slot to hide the controls
-    void showControls();     // Slot to show the controls
+    void openFile(); 
+    void play();     
+    void pause();    
+    void stop();     
+    void setPosition(int position); 
+    void updatePosition(qint64 position); 
+    void updateDuration(qint64 duration); 
+    void toggleFullScreen(); 
+    void hideControls();    
+    void showControls();     
 
 private:
     Ui::MainWindow *ui; // Pointer to the UI
