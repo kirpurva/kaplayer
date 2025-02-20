@@ -37,12 +37,12 @@ private slots:
     void showControls();     
 
 private:
-    Ui::MainWindow *ui; // Pointer to the UI
-    QMediaPlayer *mediaPlayer; // Media player object
-    QVideoWidget *videoWidget; // Video widget to display the media
-    QTimer *controlHideTimer;  // Timer to hide controls after inactivity
-    bool isPlaying;            // Flag to track if media is playing
-    bool isFullScreen;         // Flag to track if in full-screen mode
+    Ui::MainWindow *ui; 
+    QMediaPlayer *mediaPlayer; 
+    QVideoWidget *videoWidget; 
+    QTimer *controlHideTimer;  
+    bool isPlaying;            
+    bool isFullScreen;         
 
     // Full-screen toolbar controls
     QWidget *fullscreenControlsOverlay; // Full-screen toolbar widget
