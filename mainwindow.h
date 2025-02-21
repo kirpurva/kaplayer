@@ -44,13 +44,13 @@ private:
     bool isPlaying;            
     bool isFullScreen;         
 
-    // Full-screen toolbar controls
-    QWidget *fullscreenControlsOverlay; // Full-screen toolbar widget
-    QPushButton *fsPlayButton;          // Play button in full-screen mode
-    QPushButton *fsPauseButton;         // Pause button in full-screen mode
-    QPushButton *fsStopButton;          // Stop button in full-screen mode
-    QSlider *fsPositionSlider;          // Position slider in full-screen mode
-    QPushButton *fsExitFullscreenButton; // Exit full-screen button
+   
+    QWidget *fullscreenControlsOverlay;  
+    QPushButton *fsPlayButton;          
+    QPushButton *fsPauseButton;        
+    QPushButton *fsStopButton;          
+    QSlider *fsPositionSlider;          
+    QPushButton *fsExitFullscreenButton; 
 };
 
-#endif // MAINWINDOW_H
+#endif 
