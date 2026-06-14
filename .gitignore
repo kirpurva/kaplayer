@@ -17,3 +17,7 @@ cmake_install.cmake
 # Temporary or backup files
 *.tmp
 *.bak
+
+#others
+*.mp4
+
