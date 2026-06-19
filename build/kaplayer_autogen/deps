@@ -1,7 +1,7 @@
 kaplayer_autogen/timestamp: \
 	/storage/Projects/kaplayer/CMakeLists.txt \
-	/storage/Projects/kaplayer/build/CMakeFiles/4.3.3/CMakeCXXCompiler.cmake \
-	/storage/Projects/kaplayer/build/CMakeFiles/4.3.3/CMakeSystem.cmake \
+	/storage/Projects/kaplayer/build/CMakeFiles/4.3.4/CMakeCXXCompiler.cmake \
+	/storage/Projects/kaplayer/build/CMakeFiles/4.3.4/CMakeSystem.cmake \
 	/storage/Projects/kaplayer/build/kaplayer_autogen/moc_predefs.h \
 	/storage/Projects/kaplayer/main.cpp \
 	/storage/Projects/kaplayer/mainwindow.cpp \
@@ -276,7 +276,6 @@ kaplayer_autogen/timestamp: \
 	/usr/include/linux/types.h \
 	/usr/include/locale.h \
 	/usr/include/pthread.h \
-	/usr/include/qt6/QtCore/QEvent \
 	/usr/include/qt6/QtCore/QList \
 	/usr/include/qt6/QtCore/QObject \
 	/usr/include/qt6/QtCore/QRect \
@@ -423,7 +422,7 @@ kaplayer_autogen/timestamp: \
 	/usr/include/qt6/QtCore/qversiontagging.h \
 	/usr/include/qt6/QtCore/qxptype_traits.h \
 	/usr/include/qt6/QtCore/qyieldcpu.h \
-	/usr/include/qt6/QtGui/QKeyEvent \
+	/usr/include/qt6/QtGui/QResizeEvent \
 	/usr/include/qt6/QtGui/QTransform \
 	/usr/include/qt6/QtGui/qaction.h \
 	/usr/include/qt6/QtGui/qbitmap.h \
@@ -480,20 +479,14 @@ kaplayer_autogen/timestamp: \
 	/usr/include/qt6/QtWidgets/QMainWindow \
 	/usr/include/qt6/QtWidgets/QPushButton \
 	/usr/include/qt6/QtWidgets/QSlider \
-	/usr/include/qt6/QtWidgets/QStackedLayout \
 	/usr/include/qt6/QtWidgets/qabstractbutton.h \
 	/usr/include/qt6/QtWidgets/qabstractslider.h \
-	/usr/include/qt6/QtWidgets/qboxlayout.h \
 	/usr/include/qt6/QtWidgets/qframe.h \
-	/usr/include/qt6/QtWidgets/qgridlayout.h \
 	/usr/include/qt6/QtWidgets/qlabel.h \
-	/usr/include/qt6/QtWidgets/qlayout.h \
-	/usr/include/qt6/QtWidgets/qlayoutitem.h \
 	/usr/include/qt6/QtWidgets/qmainwindow.h \
 	/usr/include/qt6/QtWidgets/qpushbutton.h \
 	/usr/include/qt6/QtWidgets/qsizepolicy.h \
 	/usr/include/qt6/QtWidgets/qslider.h \
-	/usr/include/qt6/QtWidgets/qstackedlayout.h \
 	/usr/include/qt6/QtWidgets/qtabwidget.h \
 	/usr/include/qt6/QtWidgets/qtwidgets-config.h \
 	/usr/include/qt6/QtWidgets/qtwidgetsexports.h \

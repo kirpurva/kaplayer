@@ -270,7 +270,6 @@
   /usr/include/linux/types.h \
   /usr/include/locale.h \
   /usr/include/pthread.h \
-  /usr/include/qt6/QtCore/QEvent \
   /usr/include/qt6/QtCore/QList \
   /usr/include/qt6/QtCore/QObject \
   /usr/include/qt6/QtCore/QRect \
@@ -417,7 +416,7 @@
   /usr/include/qt6/QtCore/qversiontagging.h \
   /usr/include/qt6/QtCore/qxptype_traits.h \
   /usr/include/qt6/QtCore/qyieldcpu.h \
-  /usr/include/qt6/QtGui/QKeyEvent \
+  /usr/include/qt6/QtGui/QResizeEvent \
   /usr/include/qt6/QtGui/QTransform \
   /usr/include/qt6/QtGui/qaction.h \
   /usr/include/qt6/QtGui/qbitmap.h \
@@ -474,20 +473,14 @@
   /usr/include/qt6/QtWidgets/QMainWindow \
   /usr/include/qt6/QtWidgets/QPushButton \
   /usr/include/qt6/QtWidgets/QSlider \
-  /usr/include/qt6/QtWidgets/QStackedLayout \
   /usr/include/qt6/QtWidgets/qabstractbutton.h \
   /usr/include/qt6/QtWidgets/qabstractslider.h \
-  /usr/include/qt6/QtWidgets/qboxlayout.h \
   /usr/include/qt6/QtWidgets/qframe.h \
-  /usr/include/qt6/QtWidgets/qgridlayout.h \
   /usr/include/qt6/QtWidgets/qlabel.h \
-  /usr/include/qt6/QtWidgets/qlayout.h \
-  /usr/include/qt6/QtWidgets/qlayoutitem.h \
   /usr/include/qt6/QtWidgets/qmainwindow.h \
   /usr/include/qt6/QtWidgets/qpushbutton.h \
   /usr/include/qt6/QtWidgets/qsizepolicy.h \
   /usr/include/qt6/QtWidgets/qslider.h \
-  /usr/include/qt6/QtWidgets/qstackedlayout.h \
   /usr/include/qt6/QtWidgets/qtabwidget.h \
   /usr/include/qt6/QtWidgets/qtwidgets-config.h \
   /usr/include/qt6/QtWidgets/qtwidgetsexports.h \

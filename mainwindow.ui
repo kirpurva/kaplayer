@@ -4,70 +4,127 @@
 
 <class>MainWindow</class>
 
+
 <widget class="QMainWindow" name="MainWindow">
 
 
-<property name="geometry">
+ <property name="geometry">
 
-<rect>
-<x>0</x>
-<y>0</y>
-<width>1200</width>
-<height>700</height>
-</rect>
+  <rect>
 
-</property>
+   <x>0</x>
 
+   <y>0</y>
 
-<property name="windowTitle">
+   <width>1200</width>
 
-<string>Kaplayer</string>
+   <height>700</height>
 
-</property>
+  </rect>
+
+ </property>
 
 
 
-<widget class="QWidget" name="centralwidget">
+ <property name="windowTitle">
+
+  <string>Kaplayer</string>
+
+ </property>
 
 
-<layout class="QVBoxLayout" name="mainLayout">
 
 
-<property name="leftMargin">
-<number>0</number>
-</property>
-
-<property name="topMargin">
-<number>0</number>
-</property>
-
-<property name="rightMargin">
-<number>0</number>
-</property>
-
-<property name="bottomMargin">
-<number>0</number>
-</property>
+ <widget class="QWidget" name="centralwidget">
 
 
-<item>
-
-<widget class="QWidget" name="videoContainer"/>
-
-</item>
+  <layout class="QVBoxLayout" name="mainLayout">
 
 
-</layout>
+   <property name="spacing">
+
+    <number>0</number>
+
+   </property>
+
+
+
+   <property name="leftMargin">
+
+    <number>0</number>
+
+   </property>
+
+
+   <property name="topMargin">
+
+    <number>0</number>
+
+   </property>
+
+
+   <property name="rightMargin">
+
+    <number>0</number>
+
+   </property>
+
+
+   <property name="bottomMargin">
+
+    <number>0</number>
+
+   </property>
+
+
+
+
+   <item>
+
+
+    <widget class="QWidget" name="videoContainer">
+
+
+     <property name="sizePolicy">
+
+
+      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+
+
+       <horstretch>0</horstretch>
+
+
+       <verstretch>0</verstretch>
+
+
+      </sizepolicy>
+
+
+     </property>
+
+
+
+    </widget>
+
+
+   </item>
+
+
+  </layout>
+
+
+ </widget>
+
+
 
 
 </widget>
 
-
-</widget>
 
 
 <resources/>
 
 <connections/>
+
 
 </ui>
