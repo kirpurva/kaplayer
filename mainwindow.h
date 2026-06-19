@@ -8,23 +8,19 @@
 #include <QAudioOutput>
 #include <QVideoWidget>
 
-#include <QSlider>
-#include <QKeyEvent>
-#include <QStackedLayout>
 #include <QPushButton>
 #include <QSlider>
 #include <QLabel>
+
 #include <QTimer>
-#include <QStackedLayout>
-#include <QEvent>
+#include <QResizeEvent>
+
 
 QT_BEGIN_NAMESPACE
-
 namespace Ui
 {
-    class MainWindow;
+class MainWindow;
 }
-
 QT_END_NAMESPACE
 
 
@@ -37,7 +33,7 @@ class MainWindow : public QMainWindow
 
 public:
 
-    explicit MainWindow(QWidget *parent = nullptr);
+    MainWindow(QWidget *parent=nullptr);
 
     ~MainWindow();
 
@@ -45,38 +41,27 @@ public:
 
 protected:
 
+    void resizeEvent(QResizeEvent *event) override;
+
+    bool eventFilter(QObject *obj,QEvent *event) override;
+
     void keyPressEvent(QKeyEvent *event) override;
-    bool eventFilter(QObject *object, QEvent *event) override;
+
 
 
 private slots:
 
 
-    // File
-
     void openFile();
-
-
-
-    // Playback
 
     void togglePlayback();
 
+    void toggleFullScreen();
 
 
-    // Controls
-
-    void setPosition(int position);
-
-    void updatePosition(qint64 position);
+    void updatePosition(qint64 pos);
 
     void updateDuration(qint64 duration);
-
-
-
-    // Window
-
-    void toggleFullScreen();
 
 
 
@@ -86,40 +71,53 @@ private:
     Ui::MainWindow *ui;
 
 
-    // Media engine
+    // Media
 
-    QMediaPlayer *mediaPlayer;
+    QMediaPlayer *player;
 
-    QAudioOutput *audioOutput;
+    QAudioOutput *audio;
 
-    QVideoWidget *videoWidget;
+    QVideoWidget *video;
 
-    QStackedLayout *overlayLayout;
 
-    // Controls
 
-    QWidget *controlsOverlay;
+    // Floating toolbar
 
-    QPushButton *openButton;
-    QPushButton *playButton;
-    QPushButton *fullscreenButton;
+    QWidget *toolbar;
 
-    QSlider *positionSlider;
+
+    QPushButton *openBtn;
+
+    QPushButton *playBtn;
+
+    QPushButton *fullBtn;
+
+
+    QSlider *seekSlider;
+
     QSlider *volumeSlider;
 
-    QLabel *currentTimeLabel;
-    QLabel *totalTimeLabel;
+
+    QLabel *currentLabel;
+
+    QLabel *durationLabel;
+
+
 
     QTimer *hideTimer;
 
-    // States
 
-    bool isPlaying;
+    bool fullscreen=false;
 
-    bool isFullScreen;
+    bool playing=false;
+
+
+
+    void buildToolbar();
+
+    void positionToolbar();
 
 };
 
 
 #endif
-
