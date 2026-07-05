@@ -1,23 +1,2 @@
-# Object files
-*.o
-
-# Qt generated files
-moc_*.cpp
-moc_*.o
-moc_predefs.h
-ui_*.h
-
-# Build files
-Makefile
-.qmake.stash
-CMakeCache.txt
-CMakeFiles/
-cmake_install.cmake
-
-# Temporary or backup files
-*.tmp
-*.bak
-
-#others
-*.mp4
-
+build*/
+*.user
