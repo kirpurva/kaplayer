@@ -1,6 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <QIcon>
 #include <QMainWindow>
 #include <QMediaPlayer>
 
@@ -56,6 +57,12 @@ private:
     QLabel *durationLabel = nullptr;
 
     QTimer *hideTimer = nullptr;
+
+    // Themed toolbar icons (SVG, from resources)
+    QIcon playIcon;
+    QIcon pauseIcon;
+    QIcon fullscreenIcon;
+    QIcon fullscreenExitIcon;
 
     void buildToolbar();
     void positionToolbar();
