@@ -1,87 +1,76 @@
+/* ============================================================
+   Kaplayer dark theme — the single source of truth for styling.
+   No inline setStyleSheet() calls should exist in C++ code.
+   Tokens:
+     surface        #0f0f0f
+     panel          rgba(20,20,20,210)
+     text           #f0f0f0
+     text-dim       #b8b8b8
+     track          #4a4a4a
+     accent (fill)  #4da3ff
+     radius: panel 16px, controls 8px, sliders 2px
+   ============================================================ */
+
 QMainWindow {
     background-color: #0f0f0f;
 }
 
-
 QWidget {
-    color: white;
-    font-family: "Segoe UI";
+    color: #f0f0f0;
 }
 
-
-/* Bottom control glass panel */
-#controlsOverlay,
-#fullscreenControlsOverlay {
-
-    background-color: rgba(20,20,20,180);
-    border-radius: 18px;
-
+#videoContainer {
+    background-color: #000000;
 }
 
+/* Floating control bar */
+#toolbar {
+    background-color: rgba(20, 20, 20, 210);
+    border-radius: 16px;
+}
 
-/* Buttons */
-
-QPushButton {
-
+#toolbar QPushButton {
     background: transparent;
     border: none;
-
-    color: white;
-
-    font-size: 22px;
-
-    padding: 8px;
-
+    border-radius: 8px;
+    padding: 6px;
+    min-width: 30px;
+    min-height: 30px;
 }
 
-
-QPushButton:hover {
-
-    background-color: rgba(255,255,255,40);
-
-    border-radius: 12px;
-
+#toolbar QPushButton:hover {
+    background-color: rgba(255, 255, 255, 40);
 }
 
-
-QPushButton:pressed {
-
-    background-color: rgba(255,255,255,70);
-
+#toolbar QPushButton:pressed {
+    background-color: rgba(255, 255, 255, 70);
 }
 
+#toolbar QLabel {
+    color: #b8b8b8;
+    font-size: 12px;
+}
 
-/* Progress bar */
-
+/* Sliders (seek + volume share one look) */
 QSlider::groove:horizontal {
-
     height: 5px;
-
-    background: #555;
-
-    border-radius: 3px;
-
+    background: #4a4a4a;
+    border-radius: 2px;
 }
-
-
-QSlider::handle:horizontal {
-
-    background: white;
-
-    width: 14px;
-
-    height:14px;
-
-    margin: -5px 0;
-
-    border-radius:7px;
-
-}
-
 
 QSlider::sub-page:horizontal {
-
-    background:#ffffff;
-
+    background: #4da3ff;
+    border-radius: 2px;
 }
 
+QSlider::handle:horizontal {
+    background: #ffffff;
+    width: 13px;
+    height: 13px;
+    margin: -4px 0;
+    border-radius: 6px;
+}
+
+QSlider::handle:horizontal:hover {
+    background: #4da3ff;
+}
