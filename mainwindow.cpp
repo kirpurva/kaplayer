@@ -10,9 +10,13 @@
 #include <QTimer>
 #include <QHBoxLayout>
 #include <QFileDialog>
+#include <QFileInfo>
+#include <QMessageBox>
+#include <QProxyStyle>
 #include <QStandardPaths>
 #include <QKeyEvent>
 #include <QMouseEvent>
+#include <QPainterPath>
 #include <QStyle>
 #include <QTime>
 #include <QUrl>
@@ -20,10 +24,27 @@
 namespace {
 constexpr int kToolbarMaxWidth   = 850;
 constexpr int kToolbarHeight     = 64;
+constexpr int kToolbarRadius     = 16;  // keep in sync with dark.qss #toolbar
 constexpr int kToolbarSideMargin = 40;
 constexpr int kToolbarBottomGap  = 24;
 constexpr int kHideDelayMs       = 3000;
 constexpr int kDefaultVolume     = 80;  // percent
+
+// Makes a left-click on a slider groove jump the handle to that spot and
+// begin a drag, so clicking and dragging seek identically (no page-step
+// jump that then snaps back).
+class JumpSliderStyle : public QProxyStyle {
+public:
+    using QProxyStyle::QProxyStyle;
+    int styleHint(QStyle::StyleHint hint, const QStyleOption *option,
+                  const QWidget *widget,
+                  QStyleHintReturn *returnData) const override
+    {
+        if (hint == QStyle::SH_Slider_AbsoluteSetButtons)
+            return Qt::LeftButton;
+        return QProxyStyle::styleHint(hint, option, widget, returnData);
+    }
+};
 }
 
 MainWindow::MainWindow(QWidget *parent)
@@ -43,6 +64,14 @@ MainWindow::MainWindow(QWidget *parent)
     video->setGeometry(ui->videoContainer->rect());
     video->show();
 
+    // QVideoWidget embeds its output in a QWindowContainer. In its default
+    // mode that container parents the native video window to the TOP-LEVEL
+    // window, where it stacks above every widget in the app — burying the
+    // toolbar (QTBUG-97134). Forcing the container native keeps the video
+    // window inside the widget hierarchy so normal z-ordering applies.
+    if (QWidget *container = video->findChild<QWidget *>())
+        container->winId();
+
     buildToolbar();
 
     // ---- Auto-hide: same rule in windowed and fullscreen mode ----
@@ -51,11 +80,16 @@ MainWindow::MainWindow(QWidget *parent)
     hideTimer->setInterval(kHideDelayMs);
     connect(hideTimer, &QTimer::timeout, this, [this]() {
         // Only hide while actually playing; keep controls up when paused.
-        if (player->playbackState() == QMediaPlayer::PlayingState) {
-            toolbar->hide();
-            if (fullscreen)
-                video->setCursor(Qt::BlankCursor);
+        if (player->playbackState() != QMediaPlayer::PlayingState)
+            return;
+        // Never hide the controls out from under the cursor or mid-drag.
+        if (toolbar->underMouse() || seekSlider->isSliderDown()) {
+            hideTimer->start();
+            return;
         }
+        toolbar->hide();
+        if (isFullScreen())
+            video->setCursor(Qt::BlankCursor);
     });
 
     // ---- Player state -> UI (single source of truth) ----
@@ -65,21 +99,22 @@ MainWindow::MainWindow(QWidget *parent)
             this, &MainWindow::updateDuration);
     connect(player, &QMediaPlayer::playbackStateChanged,
             this, &MainWindow::onPlaybackStateChanged);
+    connect(player, &QMediaPlayer::errorOccurred,
+            this, [this](QMediaPlayer::Error, const QString &errorString) {
+        QMessageBox::warning(this, tr("Kaplayer"),
+                             errorString.isEmpty()
+                                 ? tr("This file could not be played.")
+                                 : errorString);
+    });
 
     // ---- Mouse tracking to wake the toolbar ----
+    // The videoContainer filter also drives geometry: its Resize events
+    // arrive after layout, so video/toolbar placement is never stale.
     video->installEventFilter(this);
     ui->videoContainer->installEventFilter(this);
     setMouseTracking(true);
     video->setMouseTracking(true);
     ui->videoContainer->setMouseTracking(true);
-
-    // Defer initial layout until geometry is final.
-    QTimer::singleShot(0, this, [this]() {
-        video->setGeometry(ui->videoContainer->rect());
-        positionToolbar();
-        toolbar->show();
-        toolbar->raise();
-    });
 }
 
 MainWindow::~MainWindow()
@@ -92,23 +127,36 @@ void MainWindow::buildToolbar()
     toolbar = new QWidget(ui->videoContainer);
     toolbar->setObjectName("toolbar");
 
+    // QVideoWidget hosts a native child window (QTBUG-97134), and native
+    // windows always paint above ordinary sibling widgets — raise() alone
+    // can never lift the toolbar over the video. Giving the toolbar its
+    // own native handle makes it part of the native z-order, so raise()
+    // genuinely works.
+    toolbar->setAttribute(Qt::WA_NativeWindow);
+
     const int iconPx = 22;
     const QSize iconSize(iconPx, iconPx);
 
-    // Standard theme icons render identically across platforms,
-    // and play/pause occupy the same width (no layout shift).
+    // Themed SVG icons: light strokes/fills that stay visible on the dark
+    // panel. Play/pause (and the fullscreen pair) share one viewBox, so
+    // swapping them never shifts the layout.
+    playIcon           = QIcon(QStringLiteral(":/icons/play.svg"));
+    pauseIcon          = QIcon(QStringLiteral(":/icons/pause.svg"));
+    fullscreenIcon     = QIcon(QStringLiteral(":/icons/fullscreen.svg"));
+    fullscreenExitIcon = QIcon(QStringLiteral(":/icons/fullscreen-exit.svg"));
+
     openBtn = new QPushButton;
-    openBtn->setIcon(style()->standardIcon(QStyle::SP_DialogOpenButton));
+    openBtn->setIcon(QIcon(QStringLiteral(":/icons/open.svg")));
     openBtn->setIconSize(iconSize);
     openBtn->setToolTip(tr("Open video (Ctrl+O)"));
 
     playBtn = new QPushButton;
-    playBtn->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
+    playBtn->setIcon(playIcon);
     playBtn->setIconSize(iconSize);
     playBtn->setToolTip(tr("Play/Pause (Space)"));
 
     fullBtn = new QPushButton;
-    fullBtn->setIcon(style()->standardIcon(QStyle::SP_TitleBarMaxButton));
+    fullBtn->setIcon(fullscreenIcon);
     fullBtn->setIconSize(iconSize);
     fullBtn->setToolTip(tr("Fullscreen (F)"));
 
@@ -124,6 +172,12 @@ void MainWindow::buildToolbar()
     volumeSlider->setFixedWidth(110);
     volumeSlider->setToolTip(tr("Volume"));
 
+    // Speaker glyph marks the volume slider apart from the timeline.
+    auto *volumeIcon = new QLabel;
+    volumeIcon->setPixmap(QIcon(QStringLiteral(":/icons/volume.svg"))
+                              .pixmap(QSize(18, 18), devicePixelRatioF()));
+    volumeIcon->setToolTip(tr("Volume"));
+
     // Grouping: file action | transport | timeline | volume | window
     auto *row = new QHBoxLayout(toolbar);
     row->setContentsMargins(16, 8, 16, 8);
@@ -133,6 +187,8 @@ void MainWindow::buildToolbar()
     row->addWidget(currentLabel);
     row->addWidget(seekSlider, /*stretch*/ 1);
     row->addWidget(durationLabel);
+    row->addSpacing(4);
+    row->addWidget(volumeIcon);
     row->addWidget(volumeSlider);
     row->addWidget(fullBtn);
 
@@ -153,6 +209,24 @@ void MainWindow::buildToolbar()
     };
     connect(volumeSlider, &QSlider::valueChanged, this, applyVolume);
     applyVolume(kDefaultVolume);
+
+    // Click-to-seek: groove clicks jump-and-drag on both sliders.
+    auto *jumpStyle = new JumpSliderStyle;
+    jumpStyle->setParent(this);
+    seekSlider->setStyle(jumpStyle);
+    volumeSlider->setStyle(jumpStyle);
+
+    // Shortcuts stay global (no control may steal keyboard focus), and
+    // hovering any part of the toolbar counts as activity so the
+    // auto-hide never pulls the controls out from under the cursor.
+    toolbar->setMouseTracking(true);
+    toolbar->installEventFilter(this);
+    const auto children = toolbar->findChildren<QWidget *>();
+    for (QWidget *child : children) {
+        child->setFocusPolicy(Qt::NoFocus);
+        child->setMouseTracking(true);
+        child->installEventFilter(this);
+    }
 }
 
 void MainWindow::positionToolbar()
@@ -166,6 +240,15 @@ void MainWindow::positionToolbar()
     const int y = ch - kToolbarHeight - kToolbarBottomGap;
 
     toolbar->setGeometry(x, y, w, kToolbarHeight);
+
+    // The toolbar is a native window, so the stylesheet's rounded corners
+    // only round the painted panel — the square window surface behind it
+    // still shows at the corners. Clip the window itself to match.
+    QPainterPath shape;
+    shape.addRoundedRect(QRectF(0, 0, w, kToolbarHeight),
+                         kToolbarRadius, kToolbarRadius);
+    toolbar->setMask(QRegion(shape.toFillPolygon().toPolygon()));
+
     toolbar->raise();
 }
 
@@ -177,22 +260,43 @@ void MainWindow::wakeToolbar()
     hideTimer->start();
 }
 
-void MainWindow::resizeEvent(QResizeEvent *event)
+void MainWindow::showEvent(QShowEvent *event)
 {
-    QMainWindow::resizeEvent(event);
-    video->setGeometry(ui->videoContainer->rect());
-    positionToolbar();
+    QMainWindow::showEvent(event);
+    // The video's native window (QWindowContainer) is created and stacked
+    // during show, after any earlier raise() calls. Defer one raise so the
+    // toolbar ends up above it in the native z-order.
+    QTimer::singleShot(0, this, [this]() {
+        positionToolbar();
+    });
 }
 
 bool MainWindow::eventFilter(QObject *obj, QEvent *event)
 {
-    if (event->type() == QEvent::MouseMove) {
+    if (obj == ui->videoContainer && event->type() == QEvent::Resize) {
+        video->setGeometry(ui->videoContainer->rect());
+        positionToolbar();
+    } else if (event->type() == QEvent::MouseMove) {
         wakeToolbar();
-    } else if (event->type() == QEvent::MouseButtonDblClick) {
+    } else if (event->type() == QEvent::MouseButtonDblClick
+               && (obj == video || obj == ui->videoContainer)) {
         toggleFullScreen();
         return true;
     }
     return QMainWindow::eventFilter(obj, event);
+}
+
+void MainWindow::changeEvent(QEvent *event)
+{
+    QMainWindow::changeEvent(event);
+    if (event->type() == QEvent::WindowStateChange && fullBtn) {
+        // Mirror window state on the button icon (same pattern as
+        // play/pause) and never leave a blanked cursor behind.
+        fullBtn->setIcon(isFullScreen() ? fullscreenExitIcon
+                                        : fullscreenIcon);
+        if (!isFullScreen())
+            video->setCursor(Qt::ArrowCursor);
+    }
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *event)
@@ -211,7 +315,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
         }
         break;
     case Qt::Key_Escape:
-        if (fullscreen) {
+        if (isFullScreen()) {
             toggleFullScreen();
             return;
         }
@@ -235,6 +339,8 @@ void MainWindow::openFile()
         return;
 
     player->setSource(QUrl::fromLocalFile(file));
+    setWindowTitle(QStringLiteral("%1 — Kaplayer")
+                       .arg(QFileInfo(file).fileName()));
     player->play();
     wakeToolbar();
 }
@@ -250,13 +356,13 @@ void MainWindow::togglePlayback()
 
 void MainWindow::toggleFullScreen()
 {
-    fullscreen = !fullscreen;
-    if (fullscreen) {
-        showFullScreen();
-    } else {
+    // Window state is the single source of truth — no shadow flag to drift.
+    // Icon and cursor restoration happen in changeEvent, so they also
+    // track state changes made by the OS or window manager.
+    if (isFullScreen())
         showNormal();
-        video->setCursor(Qt::ArrowCursor);
-    }
+    else
+        showFullScreen();
     wakeToolbar();
 }
 
@@ -277,10 +383,10 @@ void MainWindow::updateDuration(qint64 duration)
 void MainWindow::onPlaybackStateChanged(QMediaPlayer::PlaybackState state)
 {
     const bool isPlaying = (state == QMediaPlayer::PlayingState);
-    playBtn->setIcon(style()->standardIcon(
-        isPlaying ? QStyle::SP_MediaPause : QStyle::SP_MediaPlay));
-    if (!isPlaying)
-        wakeToolbar();  // media ended or paused: keep controls visible
+    playBtn->setIcon(isPlaying ? pauseIcon : playIcon);
+    // Playing re-arms the auto-hide countdown; paused/stopped shows the
+    // controls and the timer callback then declines to hide them.
+    wakeToolbar();
 }
 
 QString MainWindow::formatTime(qint64 ms)
