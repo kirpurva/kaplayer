@@ -57,6 +57,7 @@ private:
     QLabel *durationLabel = nullptr;
 
     QTimer *hideTimer = nullptr;
+    qint64 pendingSeek = -1;  // seek target awaiting backend confirmation
 
     // Themed toolbar icons (SVG, from resources)
     QIcon playIcon;
@@ -67,6 +68,7 @@ private:
     void buildToolbar();
     void positionToolbar();
     void wakeToolbar();
+    void seekTo(qint64 pos);
     static QString formatTime(qint64 ms);
 };
 
