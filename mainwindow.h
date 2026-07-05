@@ -24,7 +24,7 @@ public:
     ~MainWindow();
 
 protected:
-    void resizeEvent(QResizeEvent *event) override;
+    void changeEvent(QEvent *event) override;
     bool eventFilter(QObject *obj, QEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;
 
@@ -55,7 +55,6 @@ private:
     QLabel *durationLabel = nullptr;
 
     QTimer *hideTimer = nullptr;
-    bool fullscreen = false;
 
     void buildToolbar();
     void positionToolbar();
