@@ -24,6 +24,7 @@ public:
     ~MainWindow();
 
 protected:
+    void showEvent(QShowEvent *event) override;
     void changeEvent(QEvent *event) override;
     bool eventFilter(QObject *obj, QEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;

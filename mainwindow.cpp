@@ -62,6 +62,14 @@ MainWindow::MainWindow(QWidget *parent)
     video->setGeometry(ui->videoContainer->rect());
     video->show();
 
+    // QVideoWidget embeds its output in a QWindowContainer. In its default
+    // mode that container parents the native video window to the TOP-LEVEL
+    // window, where it stacks above every widget in the app — burying the
+    // toolbar (QTBUG-97134). Forcing the container native keeps the video
+    // window inside the widget hierarchy so normal z-ordering applies.
+    if (QWidget *container = video->findChild<QWidget *>())
+        container->winId();
+
     buildToolbar();
 
     // ---- Auto-hide: same rule in windowed and fullscreen mode ----
@@ -116,6 +124,13 @@ void MainWindow::buildToolbar()
 {
     toolbar = new QWidget(ui->videoContainer);
     toolbar->setObjectName("toolbar");
+
+    // QVideoWidget hosts a native child window (QTBUG-97134), and native
+    // windows always paint above ordinary sibling widgets — raise() alone
+    // can never lift the toolbar over the video. Giving the toolbar its
+    // own native handle makes it part of the native z-order, so raise()
+    // genuinely works.
+    toolbar->setAttribute(Qt::WA_NativeWindow);
 
     const int iconPx = 22;
     const QSize iconSize(iconPx, iconPx);
@@ -218,6 +233,17 @@ void MainWindow::wakeToolbar()
     toolbar->raise();
     video->setCursor(Qt::ArrowCursor);
     hideTimer->start();
+}
+
+void MainWindow::showEvent(QShowEvent *event)
+{
+    QMainWindow::showEvent(event);
+    // The video's native window (QWindowContainer) is created and stacked
+    // during show, after any earlier raise() calls. Defer one raise so the
+    // toolbar ends up above it in the native z-order.
+    QTimer::singleShot(0, this, [this]() {
+        positionToolbar();
+    });
 }
 
 bool MainWindow::eventFilter(QObject *obj, QEvent *event)
