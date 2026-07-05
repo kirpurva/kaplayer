@@ -1,2 +1,0 @@
-set(__QT_DEPLOY_TARGET_kaplayer_FILE /storage/Projects/kaplayer/kaplayer)
-set(__QT_DEPLOY_TARGET_kaplayer_TYPE EXECUTABLE)

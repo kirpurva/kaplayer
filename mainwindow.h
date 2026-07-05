@@ -1,6 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <QIcon>
 #include <QMainWindow>
 #include <QMediaPlayer>
 
@@ -24,7 +25,8 @@ public:
     ~MainWindow();
 
 protected:
-    void resizeEvent(QResizeEvent *event) override;
+    void showEvent(QShowEvent *event) override;
+    void changeEvent(QEvent *event) override;
     bool eventFilter(QObject *obj, QEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;
 
@@ -55,7 +57,12 @@ private:
     QLabel *durationLabel = nullptr;
 
     QTimer *hideTimer = nullptr;
-    bool fullscreen = false;
+
+    // Themed toolbar icons (SVG, from resources)
+    QIcon playIcon;
+    QIcon pauseIcon;
+    QIcon fullscreenIcon;
+    QIcon fullscreenExitIcon;
 
     void buildToolbar();
     void positionToolbar();

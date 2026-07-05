@@ -74,3 +74,11 @@ QSlider::handle:horizontal {
 QSlider::handle:horizontal:hover {
     background: #4da3ff;
 }
+
+/* Tooltips follow the same dark palette as the rest of the UI */
+QToolTip {
+    background-color: #1a1a1a;
+    color: #f0f0f0;
+    border: 1px solid #3a3a3a;
+    padding: 4px 8px;
+}
