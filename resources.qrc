@@ -7,5 +7,6 @@
         <file>icons/fullscreen.svg</file>
         <file>icons/fullscreen-exit.svg</file>
         <file>icons/volume.svg</file>
+        <file>icons/kaplayer.ico</file>
     </qresource>
 </RCC>

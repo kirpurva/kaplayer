@@ -21,6 +21,7 @@ add_executable(kaplayer
     mainwindow.h
     mainwindow.ui
     resources.qrc
+    kaplayer.rc
 )
 
 target_link_libraries(kaplayer PRIVATE
