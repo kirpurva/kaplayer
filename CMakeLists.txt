@@ -15,7 +15,8 @@ find_package(Qt6 REQUIRED COMPONENTS
     MultimediaWidgets
 )
 
-add_executable(kaplayer
+# WIN32 = GUI subsystem: no console window opens behind the app
+add_executable(kaplayer WIN32
     main.cpp
     mainwindow.cpp
     mainwindow.h
