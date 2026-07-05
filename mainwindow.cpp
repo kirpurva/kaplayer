@@ -16,6 +16,7 @@
 #include <QStandardPaths>
 #include <QKeyEvent>
 #include <QMouseEvent>
+#include <QPainterPath>
 #include <QStyle>
 #include <QTime>
 #include <QUrl>
@@ -23,6 +24,7 @@
 namespace {
 constexpr int kToolbarMaxWidth   = 850;
 constexpr int kToolbarHeight     = 64;
+constexpr int kToolbarRadius     = 16;  // keep in sync with dark.qss #toolbar
 constexpr int kToolbarSideMargin = 40;
 constexpr int kToolbarBottomGap  = 24;
 constexpr int kHideDelayMs       = 3000;
@@ -135,20 +137,26 @@ void MainWindow::buildToolbar()
     const int iconPx = 22;
     const QSize iconSize(iconPx, iconPx);
 
-    // Standard theme icons render identically across platforms,
-    // and play/pause occupy the same width (no layout shift).
+    // Themed SVG icons: light strokes/fills that stay visible on the dark
+    // panel. Play/pause (and the fullscreen pair) share one viewBox, so
+    // swapping them never shifts the layout.
+    playIcon           = QIcon(QStringLiteral(":/icons/play.svg"));
+    pauseIcon          = QIcon(QStringLiteral(":/icons/pause.svg"));
+    fullscreenIcon     = QIcon(QStringLiteral(":/icons/fullscreen.svg"));
+    fullscreenExitIcon = QIcon(QStringLiteral(":/icons/fullscreen-exit.svg"));
+
     openBtn = new QPushButton;
-    openBtn->setIcon(style()->standardIcon(QStyle::SP_DialogOpenButton));
+    openBtn->setIcon(QIcon(QStringLiteral(":/icons/open.svg")));
     openBtn->setIconSize(iconSize);
     openBtn->setToolTip(tr("Open video (Ctrl+O)"));
 
     playBtn = new QPushButton;
-    playBtn->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
+    playBtn->setIcon(playIcon);
     playBtn->setIconSize(iconSize);
     playBtn->setToolTip(tr("Play/Pause (Space)"));
 
     fullBtn = new QPushButton;
-    fullBtn->setIcon(style()->standardIcon(QStyle::SP_TitleBarMaxButton));
+    fullBtn->setIcon(fullscreenIcon);
     fullBtn->setIconSize(iconSize);
     fullBtn->setToolTip(tr("Fullscreen (F)"));
 
@@ -164,6 +172,12 @@ void MainWindow::buildToolbar()
     volumeSlider->setFixedWidth(110);
     volumeSlider->setToolTip(tr("Volume"));
 
+    // Speaker glyph marks the volume slider apart from the timeline.
+    auto *volumeIcon = new QLabel;
+    volumeIcon->setPixmap(QIcon(QStringLiteral(":/icons/volume.svg"))
+                              .pixmap(QSize(18, 18), devicePixelRatioF()));
+    volumeIcon->setToolTip(tr("Volume"));
+
     // Grouping: file action | transport | timeline | volume | window
     auto *row = new QHBoxLayout(toolbar);
     row->setContentsMargins(16, 8, 16, 8);
@@ -173,6 +187,8 @@ void MainWindow::buildToolbar()
     row->addWidget(currentLabel);
     row->addWidget(seekSlider, /*stretch*/ 1);
     row->addWidget(durationLabel);
+    row->addSpacing(4);
+    row->addWidget(volumeIcon);
     row->addWidget(volumeSlider);
     row->addWidget(fullBtn);
 
@@ -224,6 +240,15 @@ void MainWindow::positionToolbar()
     const int y = ch - kToolbarHeight - kToolbarBottomGap;
 
     toolbar->setGeometry(x, y, w, kToolbarHeight);
+
+    // The toolbar is a native window, so the stylesheet's rounded corners
+    // only round the painted panel — the square window surface behind it
+    // still shows at the corners. Clip the window itself to match.
+    QPainterPath shape;
+    shape.addRoundedRect(QRectF(0, 0, w, kToolbarHeight),
+                         kToolbarRadius, kToolbarRadius);
+    toolbar->setMask(QRegion(shape.toFillPolygon().toPolygon()));
+
     toolbar->raise();
 }
 
@@ -267,9 +292,8 @@ void MainWindow::changeEvent(QEvent *event)
     if (event->type() == QEvent::WindowStateChange && fullBtn) {
         // Mirror window state on the button icon (same pattern as
         // play/pause) and never leave a blanked cursor behind.
-        fullBtn->setIcon(style()->standardIcon(
-            isFullScreen() ? QStyle::SP_TitleBarNormalButton
-                           : QStyle::SP_TitleBarMaxButton));
+        fullBtn->setIcon(isFullScreen() ? fullscreenExitIcon
+                                        : fullscreenIcon);
         if (!isFullScreen())
             video->setCursor(Qt::ArrowCursor);
     }
@@ -359,8 +383,7 @@ void MainWindow::updateDuration(qint64 duration)
 void MainWindow::onPlaybackStateChanged(QMediaPlayer::PlaybackState state)
 {
     const bool isPlaying = (state == QMediaPlayer::PlayingState);
-    playBtn->setIcon(style()->standardIcon(
-        isPlaying ? QStyle::SP_MediaPause : QStyle::SP_MediaPlay));
+    playBtn->setIcon(isPlaying ? pauseIcon : playIcon);
     // Playing re-arms the auto-hide countdown; paused/stopped shows the
     // controls and the timer callback then declines to hide them.
     wakeToolbar();
