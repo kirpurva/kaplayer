@@ -29,6 +29,9 @@ constexpr int kToolbarSideMargin = 40;
 constexpr int kToolbarBottomGap  = 24;
 constexpr int kHideDelayMs       = 3000;
 constexpr int kDefaultVolume     = 80;  // percent
+constexpr int kSeekStepMs        = 5000;
+constexpr int kVolumeStep        = 5;   // percent per key press
+constexpr int kSeekSettleMs      = 900; // position is "arrived" within this
 
 // Makes a left-click on a slider groove jump the handle to that spot and
 // begin a drag, so clicking and dragging seek identically (no page-step
@@ -164,13 +167,13 @@ void MainWindow::buildToolbar()
     durationLabel = new QLabel(QStringLiteral("00:00"));
 
     seekSlider = new QSlider(Qt::Horizontal);
-    seekSlider->setToolTip(tr("Seek"));
+    seekSlider->setToolTip(tr("Seek (Left/Right: 5s)"));
 
     volumeSlider = new QSlider(Qt::Horizontal);
     volumeSlider->setRange(0, 100);
     volumeSlider->setValue(kDefaultVolume);
     volumeSlider->setFixedWidth(110);
-    volumeSlider->setToolTip(tr("Volume"));
+    volumeSlider->setToolTip(tr("Volume (Up/Down)"));
 
     // Speaker glyph marks the volume slider apart from the timeline.
     auto *volumeIcon = new QLabel;
@@ -196,9 +199,16 @@ void MainWindow::buildToolbar()
     connect(playBtn, &QPushButton::clicked, this, &MainWindow::togglePlayback);
     connect(fullBtn, &QPushButton::clicked, this, &MainWindow::toggleFullScreen);
 
-    // Seeking: user drag drives the player; live jumps while scrubbing.
+    // Seeking, all routed through seekTo() so stale position reports can't
+    // bounce the handle back mid-seek. Qt quirk: an absolute-set groove
+    // click applies the new position BEFORE marking the slider down, so
+    // sliderMoved never fires for the click itself — only for drags.
+    // sliderPressed is the click's entry point; sliderMoved covers drags.
+    connect(seekSlider, &QSlider::sliderPressed, this, [this]() {
+        seekTo(seekSlider->sliderPosition());
+    });
     connect(seekSlider, &QSlider::sliderMoved,
-            player, &QMediaPlayer::setPosition);
+            this, [this](int value) { seekTo(value); });
 
     // Volume: perceptual (logarithmic) mapping so the slider feels linear.
     auto applyVolume = [this](int value) {
@@ -320,6 +330,22 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
             return;
         }
         break;
+    case Qt::Key_Right:
+        seekTo(player->position() + kSeekStepMs);
+        wakeToolbar();
+        return;
+    case Qt::Key_Left:
+        seekTo(player->position() - kSeekStepMs);
+        wakeToolbar();
+        return;
+    case Qt::Key_Up:
+        volumeSlider->setValue(volumeSlider->value() + kVolumeStep);
+        wakeToolbar();
+        return;
+    case Qt::Key_Down:
+        volumeSlider->setValue(volumeSlider->value() - kVolumeStep);
+        wakeToolbar();
+        return;
     default:
         break;
     }
@@ -366,8 +392,29 @@ void MainWindow::toggleFullScreen()
     wakeToolbar();
 }
 
+void MainWindow::seekTo(qint64 pos)
+{
+    pos = qBound<qint64>(0, pos, player->duration());
+
+    // The backend seeks asynchronously and keeps reporting pre-seek
+    // positions for a moment; remember the target so updatePosition()
+    // can drop those stale reports instead of bouncing the UI back.
+    pendingSeek = pos;
+    player->setPosition(pos);
+
+    // Reflect the target immediately — the UI should never lag a click.
+    if (!seekSlider->isSliderDown())
+        seekSlider->setValue(static_cast<int>(pos));
+    currentLabel->setText(formatTime(pos));
+}
+
 void MainWindow::updatePosition(qint64 pos)
 {
+    if (pendingSeek >= 0) {
+        if (qAbs(pos - pendingSeek) > kSeekSettleMs)
+            return;  // still reporting pre-seek positions; ignore
+        pendingSeek = -1;
+    }
     // Don't fight the user mid-scrub.
     if (!seekSlider->isSliderDown())
         seekSlider->setValue(static_cast<int>(pos));
@@ -384,6 +431,8 @@ void MainWindow::onPlaybackStateChanged(QMediaPlayer::PlaybackState state)
 {
     const bool isPlaying = (state == QMediaPlayer::PlayingState);
     playBtn->setIcon(isPlaying ? pauseIcon : playIcon);
+    if (state == QMediaPlayer::StoppedState)
+        pendingSeek = -1;  // stop resets position; don't hold the UI hostage
     // Playing re-arms the auto-hide countdown; paused/stopped shows the
     // controls and the timer callback then declines to hide them.
     wakeToolbar();
